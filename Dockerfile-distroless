@@ -1,0 +1,10 @@
+FROM golang:1.16.5-buster as build
+
+WORKDIR /go/src/script
+ADD . /go/src/script
+
+RUN go build -o /go/bin/script
+
+FROM gcr.io/distroless/base-debian10
+COPY --from=build /go/bin/script /
+CMD ["/script"]
