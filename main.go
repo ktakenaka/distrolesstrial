@@ -5,9 +5,16 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"math/rand"
+	"os"
+	"runtime/pprof"
 	"strconv"
 	"strings"
+	"testing"
 	"time"
+)
+
+const (
+	cpuProfFile = "cpu.pprof"
 )
 
 func foo(n int) string {
@@ -27,14 +34,26 @@ func foo(n int) string {
 }
 
 func main() {
+	cpufile, err := os.Create(cpuProfFile)
+	if err != nil {
+		panic(err)
+	}
+	defer cpufile.Close()
+
+	err = pprof.StartCPUProfile(cpufile)
+	if err != nil {
+		panic(err)
+	}
+	defer pprof.StopCPUProfile()
+
 	if foo(12345) != "aajmtxaattdzsxnukawxwhmfotnm" {
 		panic("wrong value!")
 	}
 
 	start := time.Now()
-	for i := 0; i < 100; i++ {
+	fmt.Println("Allocs:", int(testing.AllocsPerRun(100, func() {
 		foo(rand.Int())
-	}
+	})))
 	end := time.Now()
 	fmt.Printf("time taken: %d", end.Sub(start))
 }
